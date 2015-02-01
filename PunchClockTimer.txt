@@ -1,0 +1,72 @@
+"""
+Make EXE 
+    C:\Python34\python.exe c:\Python34\Scripts\cxfreeze v0_005_PCT_PunchClock.py --target-dir C:\util\PCTnew\ --icon digitalclock2.ico
+
+
+v0.001
+geting the basic window functions
+
+v0.002
+core working application with alarms
+year on tasks
+icons
+total time row 1, push others
+      
+v0.003
+silence alarms
+honor year on tasks
+move about to menu
+tooltip
+add no show tasks to list, restart display
+enter new tasks restart display
+
+v0.004
+reports
+modal info messages
+
+v0.005
+adjust report to real time and lawyer time
+return to my dialogs for popup, modal stops the clock in alarm_checl
+config table (daylen, backup no, log no, etc.)
+backup and log prune
+time table
+shutdown write to time table
+window position
+
+v0.006
+shift / edit time
+shutdown write to time table
+button context menu on right click (pass for now)
+
+v0.007
+add misc day times
+convert db to use a task type
+
+v0.008
+adjust aftertime from time table
+order tasks
+adjust menu to submenus
+edit tasks
+edit/add config
+
+v0.009
+notes
+more config items
+reports on notes
+    
+v0.00n
+    import csv tasks
+    copy year tasks forward
+
+    
+
+screen saver
+http://stackoverflow.com/questions/17381607/creating-a-windows-screensaver-with-python
+http://stackoverflow.com/questions/2848031/how-do-i-start-a-python-screensaver-that-takes-keyboard-input-in-ubuntu-and-pre
+
+wallpaper
+import ctypes
+SPI_SETDESKWALLPAPER = 20
+ctypes.windll.user32.SystemParametersInfoA(SPI_SETDESKWALLPAPER, 0, "image.jpg" , 0)
+
+http://stackoverflow.com/questions/14426475/change-wallpaper-in-python-for-user-while-being-system
