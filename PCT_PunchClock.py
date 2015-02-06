@@ -135,7 +135,8 @@ class PCT_PunchClock(tk.Frame):
             self.alarmcountdown -= 1
             if self.alarmcountdown < 1:
                 self.alarmcountdown = self.alarmcycletime
-                winsound.PlaySound("SystemQuestion", winsound.SND_ALIAS)
+                winsound.Beep(1000, 500);winsound.Beep(1200,400)
+                # winsound.PlaySound("SystemQuestion", winsound.SND_ALIAS)
                 if self.popuppopped == None:
                     t = tk.Toplevel(self)
                     t.wm_title("Task Time Check Alarm")

@@ -53,20 +53,18 @@ v0.009
 notes
 more config items
 reports on notes
+change file names
+GITHUB
+
+v0.010
+Use the Config Values (aftertime)
+fix db open order issue
+insert timestamp for notes
+Change alarms beep
+fix adding task alarm time and sort * 60
+Use GIT for the changes
+    Clean old timelogs (90 days)
     
 v0.00n
     import csv tasks
     copy year tasks forward
-
-    
-
-screen saver
-http://stackoverflow.com/questions/17381607/creating-a-windows-screensaver-with-python
-http://stackoverflow.com/questions/2848031/how-do-i-start-a-python-screensaver-that-takes-keyboard-input-in-ubuntu-and-pre
-
-wallpaper
-import ctypes
-SPI_SETDESKWALLPAPER = 20
-ctypes.windll.user32.SystemParametersInfoA(SPI_SETDESKWALLPAPER, 0, "image.jpg" , 0)
-
-http://stackoverflow.com/questions/14426475/change-wallpaper-in-python-for-user-while-being-system

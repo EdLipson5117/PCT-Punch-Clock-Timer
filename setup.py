@@ -16,7 +16,7 @@ executables = [
 include_files = []
 
 setup(name='PCT',
-      version = '0.009',
+      version = '0.0.1.0',
       description = 'Punch Clock Timer',
       options = dict(build_exe = buildOptions),
       executables = executables)

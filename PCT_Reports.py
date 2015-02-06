@@ -117,10 +117,12 @@ class PCT_Reports(tk.Frame):
             dtim = str(tenthtime) + '/' + "{:03.2f}".format(dayrtot[rix]/3600.0)
             tk.Label( self.holdrtl, text=dtim, width=10, anchor='w').grid(row=r,column=c)
     def date_task(self,pct,dbhn,dbht):
+        logging.info("REPORT Date Task Report")
         fh = self.notes_setup(pct,dbhn,dbht,"datetask")
         rdata = dbhn.getNotesby(self.todaydt,self.limitdt,dbht,'D')
         self.notes_write(fh,rdata,dbhn,'D')
     def task_date(self,pct,dbhn,dbht):
+        logging.info("REPORT Task Date Report")
         fh = self.notes_setup(pct,dbhn,dbht,"taskdate")
         rdata = dbhn.getNotesby(self.todaydt,self.limitdt,dbht,'T')
         self.notes_write(fh,rdata,dbhn,'T')
@@ -161,11 +163,6 @@ class PCT_Reports(tk.Frame):
             
 """
 http://www.color-hex.com/
-
-NOTESREPORTWKS
-REPORTLOC
-REPORTNUM
-
 
 """            
             

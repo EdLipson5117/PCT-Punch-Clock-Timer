@@ -3,6 +3,8 @@ import tkinter.scrolledtext as tkst
 import PCT_DB as pctdbs
 import helper_ToolTip as ToolTip
 from datetime import datetime, date, timedelta
+import time
+import logging
 
 class PCT_Notes(tk.Frame):
     def __init__(self, master=None):
@@ -65,7 +67,8 @@ class PCT_Notes(tk.Frame):
         self.textPad.focus_set()
         if texte != None:
             self.textPad.insert(tk.INSERT,texte)
-        ToolTip.ToolTip(self.textPad, anchor='e', text="Save the note")
+        self.textPad.insert(tk.END, time.asctime(time.localtime()) + '\n')
+        ToolTip.ToolTip(self.textPad, anchor='e', text="Enter the note update")
         viewPadL = []
         for ix,txt in enumerate(textv):
             viewPadL.append(tk.Label( self.holdnotetl, text=txt[1], anchor='w'))

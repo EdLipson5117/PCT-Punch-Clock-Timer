@@ -225,6 +225,9 @@ class PCT_TimeDB:
         total_appl_tm = 0
         total_wall_tm = 0
         last_appl_tm = 0
+        after_use = int(self.get_config_item('AFTERUSE'))
+        after_upper = int(self.get_config_item('AFTERUPPER'))
+        after_lower = int(self.get_config_item('AFTERLOWER'))
         for walltime in times:
             logging.info("APPSEC on db start end  " + str(walltime[0]) + ' ' + str(walltime[1]))
             logging.info("WALLTIM on db start end  " + str(walltime[2]) + ' ' + str(walltime[3]))
@@ -232,7 +235,7 @@ class PCT_TimeDB:
             appsecdiff = int(walltime[1]) - int(walltime[0])
             logging.info("APPSEC diff in sec " + str(appsecdiff))
             logging.info("WALLTIM diff in sec " + str(wallsecdiff))
-            if wallsecdiff > 3599:
+            if wallsecdiff > after_use:
                 total_wall_tm += wallsecdiff
                 total_appl_tm += appsecdiff
                 last_appl_tm = appsecdiff
@@ -254,8 +257,8 @@ class PCT_TimeDB:
         logging.info("AFTERTIME current aftertime seconds " + str(current_aftertime))
         logging.info("AFTERTIME slowness ratio app/wall " + str(clockslow))
         logging.info("AFTERTIME new aftertime seconds " + str(new_aftertime))
-        if last_appl_tm > 3600:
-            if new_aftertime > 500 and new_aftertime < 1200:
+        if last_appl_tm > after_use:
+            if new_aftertime > after_upper and new_aftertime < after_lower:
                 logging.info("AFTERTIME updated to new value")
                 self.cur.execute("UPDATE T_TASK_CONFIG SET CONFIG_VAL_CD = ? \
                 WHERE CONFIG_NM = ?",[str(new_aftertime),"AFTERTIME"])
@@ -296,6 +299,8 @@ class PCT_TimeDB:
         db = dbnm + dbext
         self.conn = sqlite3.connect(db,detect_types=sqlite3.PARSE_DECLTYPES|sqlite3.PARSE_COLNAMES)
         self.cur = self.conn.cursor()
+        self.conn.isolation_level=None
+        self.run_migrations('v0_009c')
         self.load_config()
         self.conn.close()
         dbbk = dbnm + '_bkup_' + dbbdt + dbext
@@ -304,7 +309,6 @@ class PCT_TimeDB:
         self.conn = sqlite3.connect(db,detect_types=sqlite3.PARSE_DECLTYPES|sqlite3.PARSE_COLNAMES)
         logging.info('Database connection ' + db)
         self.conn.isolation_level=None
-        self.run_migrations('v0_009c')
         self.cur = self.conn.cursor()
         self.timelog_key = self.get_next_timelog_key()
         todaydt_time = self.get_todaydt_time()

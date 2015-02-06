@@ -245,7 +245,7 @@ class PCT_Tasks(tk.Frame):
             self.n_list[5] = 0    
             elist[2] = None
 
-        elist[3] = int(elist[3])
+        elist[3] = int(elist[3]) * 60
         self.n_list[4] = elist[3]
         if elist[3] == 0:
             elist[3] = None
@@ -255,7 +255,7 @@ class PCT_Tasks(tk.Frame):
         else:
             self.n_list[6] = 0    
             elist[4] = None
-        elist[5] = int(elist[5]) * 60
+        elist[5] = int(elist[5])
         elist[6] = int(elist[6])
         self.n_list[7] = elist[5]
         self.n_list[1] = -1
