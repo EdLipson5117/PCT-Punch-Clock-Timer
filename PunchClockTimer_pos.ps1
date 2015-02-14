@@ -19,7 +19,7 @@ Write-Host "Path `t`t`t $p"
 Write-Host "Parent Script Name `t $pcmdn`n"
 
 Write-Host "Sleeping"
-sleep 90
+sleep 25
 Write-Host "Waking"
 $wh = Select-Window -ProcessName PunchClockTimer
 Write-Host "Window Handle $wh"

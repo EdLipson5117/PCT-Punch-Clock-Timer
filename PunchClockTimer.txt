@@ -62,7 +62,9 @@ fix db open order issue
 insert timestamp for notes
 Change alarms beep
 fix adding task alarm time and sort * 60
-Use GIT for the changes
+    Use GIT for the changes
+fix day cross over
+memory logging for sqlite3
     Clean old timelogs (90 days)
     
 v0.00n

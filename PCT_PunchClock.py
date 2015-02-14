@@ -31,6 +31,7 @@ class PCT_PunchClock(tk.Frame):
         self.butphotos = []
         self.buttaskdict = {}
         self.rcmenuhandle = None
+        self.new_dt = date.today().isoformat()
         # class instance initialization funtions
         self.f=tk.Frame.__init__(self, self.master)
         self.taskshandle = PCT_Tasks.PCT_Tasks(self.master)
@@ -141,7 +142,7 @@ class PCT_PunchClock(tk.Frame):
                     t = tk.Toplevel(self)
                     t.wm_title("Task Time Check Alarm")
                     t.iconbitmap('digitalclock2.ico')
-                    l1 = tk.Label(t, anchor='w', text="PCT Puch CLock Timer v0_003").grid(row=0, column=0)
+                    l1 = tk.Label(t, anchor='w', text="PCT Puch CLock Timer").grid(row=0, column=0)
                     l2 = tk.Label(t, anchor='w', text="Verify Active Task is Proper").grid(row=1, column=0)
                     self.popuppopped = tk.Button(t, text='Dismiss', command=lambda lt = t:self.popupquit(lt))
                     self.popuppopped.grid(row=10, column=0)
@@ -175,16 +176,34 @@ class PCT_PunchClock(tk.Frame):
     def update_db_time(self,tim,ix):
     #    0    1     2    3    4    5     6     7     8     9   
         (tid, ttid, pnm, tnm, tat, tash, tast, tsrt, ttim, tdt) = self.tasklist[ix]
-        new_dt = date.today().isoformat()
-        cur_dt = str(tdt)
-        if new_dt != tdt or ttid < 0: # moved on to next day or no row, reset tables at ix
-          new_id = self.PCTT.insert_task_time(tid,ttid)
-          self.timlist[ix] = 0
-          if new_dt != tdt:
-            self.totaltime = 0
-          self.tasklist[ix] = (tid, new_id, pnm, tnm, tat, tash, tast, tsrt, 0, new_dt)
+        self.new_dt = date.today().isoformat()
+        # print("update before check ", ix,self.new_dt,tdt)
+        if self.new_dt != tdt or ttid < 0: # moved on to next day or no row, reset tables at ix
+            new_id = self.PCTT.insert_task_time(tid,ttid)
+            # print("update top change ", ttid, new_id)
+            self.timlist[ix] = 0
+            # print("compare dates new, task row ", self.new_dt,tdt)
+            if self.new_dt != tdt:
+                self.totaltime = 0
+                # print("timelist ",self.timlist)
+                for i,t in enumerate(self.timlist):
+                    self.timlist[i] = 0
+                    self.dtimlist[i].set(str(timedelta(seconds=0)))
+                    self.tlist[i].configure(text=self.dtimlist[i].get())
+                    # print("tasklist i ",self.tasklist[i],"dtimlist i ",self.dtimlist[i].get())
+                    (tid, ttid, pnm, tnm, tat, tash, tast, tsrt, ttim, tdt) = self.tasklist[i]
+                    self.tasklist[i] = (tid, new_id, pnm, tnm, tat, tash, tast, tsrt, 0, self.new_dt)
+                    # print("tasklist i ",i,self.tasklist[i])
+                # print("timelist ",self.timlist)
+                newdaymsg = "NEWDAY OLD "  + str(tdt) + " NEW " +  str(self.new_dt)
+                logging.info(newdaymsg)
+            else:
+                self.tasklist[ix] = (tid, new_id, pnm, tnm, tat, tash, tast, tsrt, 0, self.new_dt)
+            self.PCTT.update_task_time(tid,new_id,1)
+            newtimmsg = "NEWTIME TASK " + pnm + ' ' + tnm + " DATE " + str(self.new_dt)
+            logging.info(newtimmsg)
         else:
-          self.PCTT.update_task_time(tid,ttid,tim)
+            self.PCTT.update_task_time(tid,ttid,tim)
     def update_runningcounter(self):
         if self.runningix != None:
             ix = self.runningix
@@ -233,7 +252,7 @@ class PCT_PunchClock(tk.Frame):
             dtim.set(str(timedelta(seconds=t[8])))
             tdtim = str(timedelta(seconds=t[8]))
             self.dtimlist.append(dtim)
-            tl = tk.Label( self.f, text=tdtim, width=9, anchor='e')
+            tl = tk.Label( self.f, text=self.dtimlist[-1].get(), width=9, anchor='e')
             tl.grid(row=gridrow, column=1)
             self.tlist.append(tl)
             self.timlist.append(t[8])

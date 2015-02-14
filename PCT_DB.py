@@ -214,6 +214,9 @@ class PCT_TimeDB:
         self.cur.execute("update t_task_timelog set log_appl_end_tm = ?, log_wall_end_tm = ?  \
             where timelog_id = ?",
             (ttno,datetime.now().time().strftime('%H:%M:%S'),tlid))
+        curdt = datetime.today()
+        purgedt = curdt - timedelta(days=90)
+        self.cur.execute("delete from t_task_timelog where log_dt < ?", [str(purgedt.date())])
     def adjust_aftertime_value(self):
         logging.info('AFTERTIME adjusting aftertime value for next time')
         current_aftertime = self.get_config_item('AFTERTIME')
@@ -274,7 +277,7 @@ class PCT_TimeDB:
     def insert_task_time(self,tid,ttid):
         self.cur.execute("select coalesce(max(tasktime_id) + 1,0) From t_TASK_TIME")
         new_ttid = self.cur.fetchone()[0]
-        self.cur.execute("insert into t_task_time (task_id,task_type_cd,tasktime_id,task_time_no,task_time_dt) values (?,?,?,?,?)",
+        self.cur.execute("insert or replace into t_task_time (task_id,task_type_cd,tasktime_id,task_time_no,task_time_dt) values (?,?,?,?,?)",
           (tid,'PT',new_ttid,0,self.todaydt))
         return new_ttid
     def insert_misc_task_time(self,tid,tim,dt):
@@ -310,6 +313,7 @@ class PCT_TimeDB:
         logging.info('Database connection ' + db)
         self.conn.isolation_level=None
         self.cur = self.conn.cursor()
+        self.cur.execute("PRAGMA journal_mode = 'MEMORY'")
         self.timelog_key = self.get_next_timelog_key()
         todaydt_time = self.get_todaydt_time()
         self.insert_task_timelog(self.timelog_key,todaydt_time)
