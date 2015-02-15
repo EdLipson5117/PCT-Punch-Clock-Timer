@@ -277,7 +277,7 @@ class PCT_TimeDB:
     def insert_task_time(self,tid,ttid):
         self.cur.execute("select coalesce(max(tasktime_id) + 1,0) From t_TASK_TIME")
         new_ttid = self.cur.fetchone()[0]
-        self.cur.execute("insert or replace into t_task_time (task_id,task_type_cd,tasktime_id,task_time_no,task_time_dt) values (?,?,?,?,?)",
+        self.cur.execute("insert into t_task_time (task_id,task_type_cd,tasktime_id,task_time_no,task_time_dt) values (?,?,?,?,?)",
           (tid,'PT',new_ttid,0,self.todaydt))
         return new_ttid
     def insert_misc_task_time(self,tid,tim,dt):

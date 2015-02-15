@@ -192,7 +192,7 @@ class PCT_PunchClock(tk.Frame):
                     self.tlist[i].configure(text=self.dtimlist[i].get())
                     # print("tasklist i ",self.tasklist[i],"dtimlist i ",self.dtimlist[i].get())
                     (tid, ttid, pnm, tnm, tat, tash, tast, tsrt, ttim, tdt) = self.tasklist[i]
-                    self.tasklist[i] = (tid, new_id, pnm, tnm, tat, tash, tast, tsrt, 0, self.new_dt)
+                    self.tasklist[i] = (tid, new_id if i == ix else -1, pnm, tnm, tat, tash, tast, tsrt, 0, self.new_dt)
                     # print("tasklist i ",i,self.tasklist[i])
                 # print("timelist ",self.timlist)
                 newdaymsg = "NEWDAY OLD "  + str(tdt) + " NEW " +  str(self.new_dt)
@@ -276,7 +276,7 @@ class PCT_PunchClock(tk.Frame):
         t = tk.Toplevel(self)
         t.wm_title("About")
         t.iconbitmap('digitalclock2.ico')
-        l1 = tk.Label(t, anchor='w', text="PCT Punch Clock Timer v0.010").grid(row=0, column=0)
+        l1 = tk.Label(t, anchor='w', text="PCT Punch Clock Timer v0.011").grid(row=0, column=0)
         l2 = tk.Label(t, anchor='w', text="by Ed Lipson (edlipsongm@gmail.com)").grid(row=1, column=0)
         l3 = tk.Label(t, anchor='w', text="Concept from Project Clock").grid(row=2, column=0)
         l4 = tk.Label(t, anchor='w', text="  by David Keeffe @2000").grid(row=3, column=0)

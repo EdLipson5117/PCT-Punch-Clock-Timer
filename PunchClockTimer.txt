@@ -66,6 +66,10 @@ Use GIT for the changes
 fix day cross over
 memory logging for sqlite3
 Clean old timelogs (90 days)
+
+v0.011
+remove insert or update for tasktime insert
+correct new ttid for day roll over
     
 v0.00n
     Move time on adjust
