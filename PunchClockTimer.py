@@ -4,6 +4,7 @@ import logging
 import PCT_PunchClock as punchclock
 import PCT_Menu as menu
 import re
+import profile
 
 
 logdt = datetime.today().strftime('%Y%m%d%H%M%S')
@@ -22,3 +23,4 @@ rcmenuhandle = menu.PCT_RCTB_Menu(pcthandle,master=root)
 punchclock.PCT_PunchClock.setrctbselfinpct(pcthandle,rcmenuhandle)
 
 pcthandle.mainloop()
+# profile.run('pcthandle.mainloop()')

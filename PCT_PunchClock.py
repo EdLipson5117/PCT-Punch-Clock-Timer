@@ -135,9 +135,11 @@ class PCT_PunchClock(tk.Frame):
         if self.alarmcycletime != None:
             self.alarmcountdown -= 1
             if self.alarmcountdown < 1:
-                self.alarmcountdown = self.alarmcycletime
+                realerttime = self.PCTT.get_config_item('REALERTTIME')
+                if realerttime == None:
+                    realerttime = 300
+                self.alarmcountdown = realerttime
                 winsound.Beep(1000, 500);winsound.Beep(1200,400)
-                # winsound.PlaySound("SystemQuestion", winsound.SND_ALIAS)
                 if self.popuppopped == None:
                     t = tk.Toplevel(self)
                     t.wm_title("Task Time Check Alarm")
@@ -276,7 +278,7 @@ class PCT_PunchClock(tk.Frame):
         t = tk.Toplevel(self)
         t.wm_title("About")
         t.iconbitmap('digitalclock2.ico')
-        l1 = tk.Label(t, anchor='w', text="PCT Punch Clock Timer v0.011").grid(row=0, column=0)
+        l1 = tk.Label(t, anchor='w', text="PCT Punch Clock Timer v0.012").grid(row=0, column=0)
         l2 = tk.Label(t, anchor='w', text="by Ed Lipson (edlipsongm@gmail.com)").grid(row=1, column=0)
         l3 = tk.Label(t, anchor='w', text="Concept from Project Clock").grid(row=2, column=0)
         l4 = tk.Label(t, anchor='w', text="  by David Keeffe @2000").grid(row=3, column=0)

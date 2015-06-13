@@ -82,11 +82,16 @@ class PCT_RCTB_Menu(tk.Frame):
         self.widgetclicked = None
         self.notesdbh = None
         self.rcMenu = tk.Menu(self.master, tearoff=0)
+        self.rcMenu.add_command(label="Move Time To/From", command=self.movetime)
         self.rcMenu.add_command(label="Adjust Time", command=self.adjusttime)
         self.rcMenu.add_command(label="Notes", command=self.editnote)
         punchclock.PCT_PunchClock.bind_rctb(pct,self.rctbself)
         self.DBT_Handle = punchclock.PCT_PunchClock.get_timeDB_handle(pct)
         self.DBN_Handle = punchclock.PCT_PunchClock.get_notesDB_handle(pct)
+    def movetime(self):
+        rctb_keys = punchclock.PCT_PunchClock.get_rctb_keys(self.pct,self.widgetclicked)
+        task_handle = punchclock.PCT_PunchClock.get_taskshandle(self.pct)
+        tasks.PCT_Tasks.movetasktime(task_handle,self.pct,self.DBT_Handle,rctb_keys) 
     def adjusttime(self):
         rctb_keys = punchclock.PCT_PunchClock.get_rctb_keys(self.pct,self.widgetclicked)
         task_handle = punchclock.PCT_PunchClock.get_taskshandle(self.pct)

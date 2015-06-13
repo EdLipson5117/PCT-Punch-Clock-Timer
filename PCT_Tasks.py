@@ -15,6 +15,8 @@ class PCT_Tasks(tk.Frame):
         self.mqb = None
         self.mab = None
         self.msb = None
+        self.mtb = None
+        self.ftb = None
         self.cbintvar = []
         self.edtfld = []
         self.atqb = None
@@ -36,12 +38,20 @@ class PCT_Tasks(tk.Frame):
         self.miscqphoto = None
         self.miscqb = None
         self.miscpphoto = None
+        self.pickfromtaskphoto = None
         self.miscpb = None
         self.valtoplvl = None
         self.valent = None
         self.misctiml = None
         self.misctime = None
         self.misctim = None
+        self.adj_or_mov = None
+        self.tid = None
+        self.bix = None
+        self.ftblist = []
+        self.frombix = None
+        self.fromtid = None
+        self.activatemoveprocesssw = 0
         self.lbdict = {}
     def val_none(self,value):
         return True
@@ -116,16 +126,20 @@ class PCT_Tasks(tk.Frame):
             self.cbpb.grid(row=0, column=1)
             ToolTip.ToolTip(self.cbpb, anchor='e', text="Process the selections")
  
-        r = 0
+        cbrow = 1
         self.cbintvar =[]
+        cbcol = 0
         for ht in self.h_list:
-            r += 1
             cbv = tk.IntVar()
             self.cbintvar.append(cbv)
             hn = ht[2] + '\n' + ht[3]
             cb = tk.Checkbutton(self.holdctl, text = hn, width = wlen, anchor = 'w',variable=self.cbintvar[-1])
             self.cb.append(cb)
-            self.cb[-1].grid(row=r,column=0,columnspan=2)
+            self.cb[-1].grid(row=cbrow,column=(cbcol*2),columnspan=2)
+            cbcol += 1
+            if cbcol > 2:
+                cbrow += 1
+                cbcol = 0
     def process_display_hidden(self):
         ix = -1
         change = 0
@@ -267,13 +281,61 @@ class PCT_Tasks(tk.Frame):
         self.d_list.append(self.n_list)
         punchclock.PCT_PunchClock.set_tasklists(self.holdpct,[self.d_list,self.h_list,[1]])
         punchclock.PCT_PunchClock.popupquit(self.holdpct,self.holdatl)
-    def adjusttasktime(self,pct,dbhandle,keys):
-        tid = keys[0]
+    def movetasktime(self,pct,dbhandle,keys): # move time to here, from somwhere else (new popup)
+        self.activatemoveprocesssw = 0
+        self.adj_or_mov = 'm'
+        self.holdpct = pct
+        llists = punchclock.PCT_PunchClock.get_tasklists(self.holdpct)
+        self.d_list = llists[0]
+        self.tid = keys[0]
         ttid = keys[1]
-        bix = keys[2]
+        self.bix = keys[2]
         self.holdpct = pct
         self.holddbh = dbhandle
-        taskname = PCT_TimeDB.PCT_TimeDB.getTaskName(dbhandle,tid)
+        taskname = PCT_TimeDB.PCT_TimeDB.getTaskName(dbhandle,self.tid)
+        self.holdmtl = tk.Toplevel(self.holdpct)
+        self.valtoplvl = self.holdmtl
+        self.holdmtl.title("Move Time to Task")
+        self.holdmtl.iconbitmap('digitalclock2.ico')
+        self.quitphoto=tk.PhotoImage(file='log_off.gif')
+        self.mqb = tk.Button(self.holdmtl, image=self.quitphoto, 
+                command=lambda lltl = self.holdmtl:punchclock.PCT_PunchClock.popupquit(pct,lltl))
+        self.mqb.grid(row=0, column=0)
+        ToolTip.ToolTip(self.mqb, anchor='e', text="Leave the window")
+        self.pickfromtaskphoto=tk.PhotoImage(file='table-select-row-icon.gif')
+        self.mtb = tk.Button(self.holdmtl, image=self.pickfromtaskphoto, 
+            command=lambda :self.popup_from_task() ) 
+        self.mtb.grid(row=0, column=1)
+        ToolTip.ToolTip(self.mtb, anchor='e', text="Pick task from which to take time") #move
+        self.processphoto=tk.PhotoImage(file='process.gif')
+        self.mab = tk.Button(self.holdmtl, image=self.processphoto, 
+            command=lambda :self.process_tofrom_timeadjustment() ) 
+        self.mab.grid(row=0, column=2)
+        self.mab.config(state =  tk.DISABLED  )
+        ToolTip.ToolTip(self.mab, anchor='e', text="Move the time")
+        t=tk.Label( self.holdmtl, text=taskname[0], anchor='w', width=36)
+        t.grid(row=1,column=0)
+        self.modval = tk.StringVar()
+        self.mvcmd = self.holdpct.register(self.val_time)
+        self.mivcmd = self.holdpct.register(self.val_terror)
+        self.edtfldivcmd.append(self.holdpct.register(self.val_terror))
+        self.modtime = tk.Entry(self.holdmtl, width = 5, textvariable=self.modval, 
+            validate = 'key')
+        self.valent = self.modtime
+        self.modtime.config(validatecommand = (self.mvcmd, '%V', '%P', '%W'),
+                    invalidcommand= (self.mivcmd, '%V', '%P', '%W'))
+        self.modtime.grid(row=1,column=1,sticky=tk.W)
+        self.modtime.focus_set()
+        ToolTip.ToolTip(t, anchor='e', 
+            text="Enter the number of minutes to move and press the process button after selecting the source task")
+    def adjusttasktime(self,pct,dbhandle,keys):
+        self.adj_or_mov = 'a'
+        self.tid = keys[0]
+        ttid = keys[1]
+        self.bix = keys[2]
+        self.holdpct = pct
+        self.holddbh = dbhandle
+        taskname = PCT_TimeDB.PCT_TimeDB.getTaskName(dbhandle,self.tid)
         self.holdmtl = tk.Toplevel(self.holdpct)
         self.valtoplvl = self.holdmtl
         self.holdmtl.title("Adjust Time for Task")
@@ -285,17 +347,17 @@ class PCT_Tasks(tk.Frame):
         ToolTip.ToolTip(self.mqb, anchor='e', text="Leave the window")
         self.plusphoto=tk.PhotoImage(file='Icojam-Blue-Bits-Math-add.gif')
         self.mab = tk.Button(self.holdmtl, image=self.plusphoto, 
-            command=lambda lbix = bix:self.process_timeadjustment('A',lbix) )
+            command=lambda lbix = self.bix:self.process_timeadjustment('A',lbix) )
         self.mab.grid(row=0, column=1)
         self.mab.config(state =  tk.DISABLED  )
         ToolTip.ToolTip(self.mab, anchor='e', text="Add the time")
         self.minusphoto=tk.PhotoImage(file='Icojam-Blue-Bits-Math-minus.gif')
         self.msb = tk.Button(self.holdmtl, image=self.minusphoto, 
-            command=lambda lbix = bix:self.process_timeadjustment('M',lbix) )
+            command=lambda lbix = self.bix:self.process_timeadjustment('M',lbix) )
         self.msb.grid(row=0, column=2)
         self.msb.config(state =  tk.DISABLED  )
         ToolTip.ToolTip(self.msb, anchor='e', text="Subtract the time")
-        t=tk.Label( self.holdmtl, text=taskname, anchor='w')
+        t=tk.Label( self.holdmtl, text=taskname[0], anchor='w',width=36)
         t.grid(row=1,column=0)
         self.modval = tk.StringVar()
         self.mvcmd = self.holdpct.register(self.val_time)
@@ -310,9 +372,18 @@ class PCT_Tasks(tk.Frame):
         self.modtime.focus_set()
         ToolTip.ToolTip(t, anchor='e', 
             text="Enter the number of minutes to change the time by and press the add or subtract button")
+    def process_tofrom_timeadjustment(self):
+        # print("process to from time adjust and ",__name__)
+        # print(self.bix,self.frombix)
+        self.process_timeadjustment('A',self.bix)
+        self.process_timeadjustment('M',self.frombix)
+        self.frombix = None
+        self.activatemoveprocesssw = 0
     def process_timeadjustment(self,op,bix):
         min = self.modval.get()
-        if len(min) > 0:
+        # print("process time adjustment")
+        # print(op,bix,min)
+        if len(min) > 0 and min != 0:
             sec = int(min) * 60
             if op == 'M':
                 sec *= -1
@@ -332,16 +403,64 @@ class PCT_Tasks(tk.Frame):
                 try:
                     self.edtfldprocessbut.config(state =  tk.ACTIVE  )
                 except:
-                    self.mab.config(state =  tk.ACTIVE  )
-                    self.msb.config(state =  tk.ACTIVE  )
+                    if self.adj_or_mov == 'm':
+                        self.activatemoveprocesssw += 1
+                        self.activatemoveprocess()
+                    if self.adj_or_mov == 'a':
+                        self.mab.config(state =  tk.ACTIVE  )
+                        self.msb.config(state =  tk.ACTIVE  )
         return ok
+    def activatemoveprocess(self):
+        if  self.activatemoveprocesssw > 1:
+            self.mab.config(state =  tk.ACTIVE  )
+    def button_pop_from_task(self,brow):
+        self.activatemoveprocesssw += 1
+        self.activatemoveprocess()
+        self.frombix = self.ftblist[brow][1]
+        # print("button pop from task")
+        # print("row ",brow,self.frombix)
+        task = self.d_list[self.frombix]
+        taskname = task[2] + '\n' + task[3]
+        t=tk.Label( self.holdmtl, text=taskname, anchor='w', width=36)
+        t.grid(row=2,column=0)
+        self.ftblist.append(t)
+        punchclock.PCT_PunchClock.popupquit(self.holdmtl,self.holdftl)
+    def popup_from_task(self):
+        self.holdftl = tk.Toplevel(self.holdmtl)
+        self.holdftl.title("Move Time From Task")
+        self.holdftl.iconbitmap('digitalclock2.ico')
+        self.ftb = tk.Button(self.holdftl, image=self.quitphoto,
+                command=lambda lltl = self.holdftl,lpct = self.holdpct:punchclock.PCT_PunchClock.popupquit(lpct,lltl))
+        gridrow = 0
+        self.ftblist = []
+        self.ftb.grid(row=gridrow, column=0)
+        ToolTip.ToolTip(self.ftb, anchor='e', text="Leave the window")
+        max_width = 36
+        for t in self.d_list:
+            n = t[2] + '\n' + t[3]
+            if len(n) > max_width:
+                max_width = len(n)
+        # print("popup from task")
+        # print("bix",self.bix)
+        for ix,t in enumerate(self.d_list):
+            # print("dlist ", ix, t)
+            if ix != self.bix:
+                gridrow += 1
+                n = t[2] + '\n' + t[3]
+                nb = tk.Button(self.holdftl, text=n, width=max_width, anchor='w', bg='white',
+                    command=lambda lr = gridrow - 1, lt = t[0]:self.button_pop_from_task(lr)  )
+                nb.grid(row=gridrow, column=0)
+                ToolTip.ToolTip(nb, anchor='e', text="Source of time to move")
+                nbix = (nb,ix)
+                self.ftblist.append(nbix)
     def val_terror(self,reason,value,widget):
         self.valent.config(bg='red')
         try:
             self.edtfldprocessbut.config(state =  tk.DISABLED  )
         except:
             self.mab.config(state =  tk.DISABLED  )
-            self.msb.config(state =  tk.DISABLED  )
+            if self.adj_or_mov == 'a':
+                self.msb.config(state =  tk.DISABLED  )
         self.valent.focus_set()
     def datepicker_pop(self):
         self.datepicker_tl = tk.Toplevel(self.master)

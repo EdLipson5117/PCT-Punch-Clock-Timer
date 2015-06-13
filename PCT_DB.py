@@ -267,7 +267,7 @@ class PCT_TimeDB:
                 WHERE CONFIG_NM = ?",[str(new_aftertime),"AFTERTIME"])
             else:
                 logging.warning("AFTERTIME new aftertime seconds " + str(new_aftertime) + 
-                    " out of bounds (500 to 1200), not updated")
+                    " out of bounds (' + after_upper + ' to ' + after_lower + '), not updated")
     def insert_task_timelog(self,tlid,ttno):
         self.cur.execute("insert into t_task_timelog (timelog_id,log_dt,log_wall_start_tm,log_appl_start_tm)  \
             values (?,?,?,?)",
@@ -275,10 +275,15 @@ class PCT_TimeDB:
     def update_task_time(self,tid,ttid,tm):
         self.cur.execute("update t_task_time set task_time_no = ? where task_id = ? and tasktime_id = ?",(tm,tid,ttid))
     def insert_task_time(self,tid,ttid):
-        self.cur.execute("select coalesce(max(tasktime_id) + 1,0) From t_TASK_TIME")
-        new_ttid = self.cur.fetchone()[0]
-        self.cur.execute("insert into t_task_time (task_id,task_type_cd,tasktime_id,task_time_no,task_time_dt) values (?,?,?,?,?)",
-          (tid,'PT',new_ttid,0,self.todaydt))
+        self.cur.execute("select tasktime_id From T_TASK_TIME where task_id = ? and task_time_dt = ?",(tid,self.todaydt))
+        test_new_ttid = self.cur.fetchone()
+        if test_new_ttid is None:
+            self.cur.execute("select coalesce(max(tasktime_id) + 1,0) From t_TASK_TIME")
+            new_ttid = self.cur.fetchone()[0]
+            self.cur.execute("insert into t_task_time (task_id,task_type_cd,tasktime_id,task_time_no,task_time_dt) values (?,?,?,?,?)",
+              (tid,'PT',new_ttid,0,self.todaydt))
+        else:
+            new_ttid = test_new_ttid[0]
         return new_ttid
     def insert_misc_task_time(self,tid,tim,dt):
         self.cur.execute("select coalesce(max(tasktime_id) + 1,0) From t_TASK_TIME")

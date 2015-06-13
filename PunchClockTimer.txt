@@ -70,14 +70,20 @@ Clean old timelogs (90 days)
 v0.011
 remove insert or update for tasktime insert
 correct new ttid for day roll over
+
+v0.012
+    reset the button when there is a name change in a task or project, see the day cross over for sample loop
+    Hidden task window, can't get too long, make 3 columns wide?
+    Timer pop, if still popped redo alarm
+    Move time on adjust (2 adjusts, sub from and add to)
     
 v0.00n
-    Move time on adjust
-    show alarm countdown
+    reload task alert times on task edit
+    Edit previous days time and notes (current time stamp)
     Split time for up to three active tasks
     Report on Notes as a tree
     Report on Time as a tree
-    Edit previous days time and notes (current time stamp)
+    show alarm countdown (?)
     make pretty
     import csv tasks
     copy year tasks forward
