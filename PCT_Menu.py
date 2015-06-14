@@ -3,6 +3,7 @@ import PCT_PunchClock as punchclock
 import PCT_Tasks as tasks
 import PCT_Reports as reports
 import PCT_Notes as notes
+import PCT_History as history
 
 class PCT_Menu(tk.Frame):
     def __init__(self, pct, master=None):
@@ -62,6 +63,9 @@ class PCT_Menu(tk.Frame):
                 :reports.PCT_Reports.date_task(lrpt,lpct,ldbhn,ldbht))
         self.reportmenu.add_cascade(label="Notes", menu=self.notesrptmenu)
 #end of submenu
+        self.reportmenu.add_command(label="History", 
+                command=lambda lpct = pct, lhis = history.PCT_History(), ldbh = self.DB_Handle \
+                :history.PCT_History.historical_edit(lhis,lpct,ldbh))
         self.menubar.add_cascade(label="Reports", menu=self.reportmenu)
 #Help
         self.helpmenu = tk.Menu(self.menubar, tearoff=0)

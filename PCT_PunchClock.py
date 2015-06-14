@@ -46,6 +46,23 @@ class PCT_PunchClock(tk.Frame):
         logging.info(totaltimemsg)
         self.auto_start()
         self.update_runningcounter()
+    def about(self):
+        t = tk.Toplevel(self)
+        t.wm_title("About")
+        t.iconbitmap('digitalclock2.ico')
+        l1 = tk.Label(t, anchor='w', text="PCT Punch Clock Timer v0.013", width = 36).grid(row=0, column=0)
+        l2 = tk.Label(t, anchor='w', text="by Ed Lipson (edlipsongm@gmail.com)").grid(row=1, column=0)
+        l3 = tk.Label(t, anchor='w', text="Concept from Project Clock").grid(row=2, column=0)
+        l4 = tk.Label(t, anchor='w', text="  by David Keeffe @2000").grid(row=3, column=0)
+        l5 = tk.Label(t, anchor='w', text="Licensed under Apache License 2.0").grid(row=4, column=0)
+        bq = tk.Button(t, text='Dismiss',
+            command=lambda lt = t:self.popupquit(lt))
+        bq.grid(row=10, column=0)
+        bq.focus_set()
+        t.lift()
+        t.grab_set()
+        t.transient(self)
+        t.wait_window(t)
     def setrctbselfinpct(self,rcmenuhandle):
         self.rcmenuhandle = rcmenuhandle
         return self.rcmenuhandle
@@ -57,7 +74,6 @@ class PCT_PunchClock(tk.Frame):
         newgeo=str(wcalc) + 'x' + str(hcalc) + '+1+55' 
         oldgeo = self.master.wm_geometry()
         logging.info("GEO old " + oldgeo + " new " + newgeo + " max but len " + str(self.max_but_len))
-        # self.master.geometry(newgeo)
     def get_rctb_keys(self,but):
         return self.buttaskdict[but]
     def get_timeDB_handle(self):
@@ -146,11 +162,14 @@ class PCT_PunchClock(tk.Frame):
                     t.iconbitmap('digitalclock2.ico')
                     l1 = tk.Label(t, anchor='w', text="PCT Puch CLock Timer").grid(row=0, column=0)
                     l2 = tk.Label(t, anchor='w', text="Verify Active Task is Proper").grid(row=1, column=0)
-                    self.popuppopped = tk.Button(t, text='Dismiss', command=lambda lt = t:self.popupquit(lt))
+                    self.popuppopped = tk.Button(t, text='Dismiss', command=lambda lt = t:self.alarm_clear(lt))
                     self.popuppopped.grid(row=10, column=0)
                     self.popuppopped.lift()
                     self.popuppopped.focus_set()
                     t.grab_set()
+    def alarm_clear(self,toplvl):
+        self.popupquit(toplvl)
+        self.alarmcountdown = self.alarmcycletime
     def adjust_task_time(self,ix,atim):
         if ix == self.runningix:
             self.timlist[ix] += atim
@@ -274,23 +293,6 @@ class PCT_PunchClock(tk.Frame):
         for t in self.timlist:
           tt += t
         return tt
-    def about(self):
-        t = tk.Toplevel(self)
-        t.wm_title("About")
-        t.iconbitmap('digitalclock2.ico')
-        l1 = tk.Label(t, anchor='w', text="PCT Punch Clock Timer v0.012").grid(row=0, column=0)
-        l2 = tk.Label(t, anchor='w', text="by Ed Lipson (edlipsongm@gmail.com)").grid(row=1, column=0)
-        l3 = tk.Label(t, anchor='w', text="Concept from Project Clock").grid(row=2, column=0)
-        l4 = tk.Label(t, anchor='w', text="  by David Keeffe @2000").grid(row=3, column=0)
-        l5 = tk.Label(t, anchor='w', text="Licensed under Apache License 2.0").grid(row=4, column=0)
-        bq = tk.Button(t, text='Dismiss',
-            command=lambda lt = t:self.popupquit(lt))
-        bq.grid(row=10, column=0)
-        bq.focus_set()
-        t.lift()
-        t.grab_set()
-        t.transient(self)
-        t.wait_window(t)
     def popupquit(self,w):
         self.popuppopped = None
         w.destroy()

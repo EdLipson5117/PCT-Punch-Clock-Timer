@@ -107,6 +107,20 @@ class PCT_TimeDB:
               WHERE TASK_TYPE_CD = ? and TASK_YR = ? ORDER BY TASK_SORT_GUI_NO",[type_cd, self.todayyr])
         tasks = self.cur.fetchall()
         return tasks
+    def get_history_tasks(self,hdate,hyear):
+        self.cur.execute(\
+        "SELECT TT.TASKTIME_ID, T.TASK_ID, TT.TASK_TIME_NO, TT.TASK_TIME_DT, TT.TASK_TYPE_CD, \
+        T.TASK_NM, T.TASK_PROJ_NM, T.TASK_SORT_RPT_NO \
+        FROM  \
+        (SELECT TASK_ID, TASK_NM, TASK_PROJ_NM, TASK_SORT_RPT_NO \
+        FROM T_TASKS WHERE TASK_YR = ?) T \
+        LEFT OUTER JOIN \
+        (SELECT TASKTIME_ID, TASK_TIME_NO, TASK_TIME_DT, TASK_TYPE_CD, TASK_ID \
+        FROM T_TASK_TIME WHERE TASK_TIME_DT = ?) TT ON T.TASK_ID = TT.TASK_ID \
+        ORDER BY T.TASK_SORT_RPT_NO",
+        (hyear,hdate))
+        htasks = self.cur.fetchall()
+        return htasks
     def update_task_sort(self,opt,tid,srtno):
         if opt == 'RPT':
             self.cur.execute("update t_tasks set task_sort_rpt_no = ? where task_id = ?", (srtno,tid))
