@@ -39,14 +39,16 @@ create_contents() : creates the contents of the tooltip window (by default a Tki
 
 import tkinter
 
+
 class ToolTip:
+
     def __init__(self, master, text='Your text here', delay=1500, **opts):
-    # def __init__(self, master, text, delay=1500, **opts):
+        # def __init__(self, master, text, delay=1500, **opts):
         self.master = master
-        self._opts = {'anchor':'center', 'bd':1, 'bg':'lightyellow', 'delay':delay, 'fg':'black',\
-                      'follow_mouse':0, 'font':None, 'justify':'left', 'padx':4, 'pady':2,\
-                      'relief':'solid', 'state':'normal', 'text':text, 'textvariable':None,\
-                      'width':0, 'wraplength':150}
+        self._opts = {'anchor': 'center', 'bd': 1, 'bg': 'lightyellow', 'delay': delay, 'fg': 'black',
+                      'follow_mouse': 0, 'font': None, 'justify': 'left', 'padx': 4, 'pady': 2,
+                      'relief': 'solid', 'state': 'normal', 'text': text, 'textvariable': None,
+                      'width': 0, 'wraplength': 150}
         self.configure(**opts)
         self._tipwindow = None
         self._id = None
@@ -57,33 +59,33 @@ class ToolTip:
         if self._opts['follow_mouse']:
             self._id4 = self.master.bind("<Motion>", self.motion, '+')
             self._follow_mouse = 1
-    
+
     def configure(self, **opts):
         for key in opts:
             # if self._opts.has_key(key):
             if key in self._opts:
                 self._opts[key] = opts[key]
             else:
-                KeyError = 'KeyError: Unknown option: "%s"' %key
+                KeyError = 'KeyError: Unknown option: "%s"' % key
                 raise KeyError
-    
+
     ##----these methods handle the callbacks on "<Enter>", "<Leave>" and "<Motion>"---------------##
     ##----events on the parent widget; override them if you want to change the widget's behavior--##
-    
+
     def enter(self, event=None):
         self._schedule()
-        
+
     def leave(self, event=None):
         self._unschedule()
         self._hide()
-    
+
     def motion(self, event=None):
         if self._tipwindow and self._follow_mouse:
             x, y = self.coords()
             self._tipwindow.wm_geometry("+%d+%d" % (x, y))
-    
+
     ##------the methods that do the work:---------------------------------------------------------##
-    
+
     def _schedule(self):
         self._unschedule()
         if self._opts['state'] == 'disabled':
@@ -107,28 +109,30 @@ class ToolTip:
             tw.wm_overrideredirect(1)
 
             if tw.tk.call("tk", "windowingsystem") == 'aqua':
-                tw.tk.call("::tk::unsupported::MacWindowStyle", "style", tw._w, "help", "none")
+                tw.tk.call(
+                    "::tk::unsupported::MacWindowStyle", "style", tw._w, "help", "none")
 
             self.create_contents()
             tw.update_idletasks()
             x, y = self.coords()
             tw.wm_geometry("+%d+%d" % (x, y))
             tw.deiconify()
-    
+
     def _hide(self):
         tw = self._tipwindow
         self._tipwindow = None
         if tw:
             tw.destroy()
-                
+
     ##----these methods might be overridden in derived classes:----------------------------------##
-    
+
     def coords(self):
         # The tip window must be completely outside the master widget;
         # otherwise when the mouse enters the tip window we get
         # a leave event and it disappears, and then we get an enter
         # event and it reappears, and so on forever :-(
-        # or we take care that the mouse pointer is always outside the tipwindow :-)
+        # or we take care that the mouse pointer is always outside the
+        # tipwindow :-)
         tw = self._tipwindow
         twx, twy = tw.winfo_reqwidth(), tw.winfo_reqheight()
         w, h = tw.winfo_screenwidth(), tw.winfo_screenheight()
@@ -171,4 +175,4 @@ class ToolTip:
     # root.mainloop()
 
 # if __name__ == '__main__':
-    # demo()  
+    # demo()
