@@ -739,12 +739,19 @@ class PCT_Tasks(tk.Frame):
         holdetltl.iconbitmap('digitalclock2.ico')
         self.etllists[2] = holdetltl
         etlqphoto = tk.PhotoImage(file='log_off.gif')
-        self.etllists[3] = etlqphoto
+        self.etllists[3] = [etlqphoto]
         etlqb = tk.Button(holdetltl, image=etlqphoto,
                           command=lambda lltl=holdetltl: punchclock.PCT_PunchClock.popupquit(pcthandle, lltl))
-        self.etllists[4] = etlqb
+        self.etllists[4] = [etlqb]
         etlqb.grid(row=0, column=0)
         ToolTip.ToolTip(etlqb, anchor='e', text="Leave the window")
+        etlcnyphoto = tk.PhotoImage(file='fire-ball-icon32-hi.gif')
+        self.etllists[3].append(etlcnyphoto)
+        etlcnyb = tk.Button(holdetltl, image=etlcnyphoto, 
+                        command=lambda: PCT_TimeDB.PCT_TimeDB.copytasksforwardoneyear(dbhandle))
+        self.etllists[4].append(etlcnyb)
+        etlcnyb.grid(row=0, column=1)
+        ToolTip.ToolTip(etlcnyb, anchor='e', text="Copy Year Forward")
         tasks = self.DB_Handle.getTasks()
         tnwidth = self.DB_Handle.get_max_but_len() * 2
         vsb = tk.Scrollbar(
@@ -884,6 +891,7 @@ class PCT_Tasks(tk.Frame):
         tas = self.edtfld[5][0].get()
         tid = self.etlists[5][0]
         self.etlists[0][2].setTask([tid, pnm, tnm, tat, tsh, tas])
+        self.holdpct.update_task_name(tid,pnm,tnm) 
         punchclock.PCT_PunchClock.reset_alarmcycletime(self.holdpct, tid, tat)
         if allpnm == 'Y':
             self.etlists[0][2].setTaskProj(self.etlists[5][1], pnm)

@@ -243,7 +243,34 @@ class PCT_TimeDB:
             (self.todaydt, 'PT', self.todayyr, self.todaydt))
         self.t = self.cur.fetchall()
         return self.t
-
+    def copytasksforwardoneyear(self):
+        nextyr = str(int(self.todayyr) + 1)
+        lmsg = "Copying tasks forward to next year"
+        logging.info(lmsg)
+        lmsg = 'Starting year ' + str(self.todayyr) + ' new year ' + str(nextyr)
+        logging.info (lmsg)
+        self.cur.execute("select count(*) from t_tasks Where task_yr = ?",
+                         [nextyr])
+        nextyrct = self.cur.fetchone()[0]
+        if nextyrct > 0:
+            lmsg = 'Next year tasks exist ' + str(nextyrct)
+            logging.warning (lmsg)
+        else:
+            self.cur.execute("select max(task_id) from t_tasks")
+            maxtaskid = self.cur.fetchone()[0]
+            maxtaskid += 1
+            self.cur.execute("Select TASK_YR+1, TASK_SORT_RPT_NO, TASK_SORT_GUI_NO, TASK_AUTO_START_CD, TASK_ALWAYS_SHOW_CD, TASK_ALERT_TM, TASK_PROJ_NM, TASK_NM, TASK_TYPE_CD From T_TASKS Where task_yr = ? order by task_type_cd,task_sort_gui_no, task_proj_nm, task_nm",
+                         [self.todayyr])
+            tasks = self.cur.fetchall()
+            for ix,task in enumerate(tasks):
+                taskval = list(task)
+                taskval.append(str(maxtaskid + ix))
+                self.cur.execute("insert into t_tasks (TASK_YR, TASK_SORT_RPT_NO, TASK_SORT_GUI_NO, TASK_AUTO_START_CD, TASK_ALWAYS_SHOW_CD, TASK_ALERT_TM, TASK_PROJ_NM, TASK_NM, TASK_TYPE_CD, task_id) values(?,?,?,?,?,?,?,?,?,?)",
+                         taskval)
+            else:
+                lmsg = 'Starting taskid ' + str(maxtaskid) + ' number inserted ' + str(ix+1)
+                logging.info (lmsg)
+        
     def getTasksReport(self):
         self.cur.execute("SELECT TASK_SORT_RPT_NO ,TASK_PROJ_NM ,TASK_NM ,TASK_ID \
         FROM T_TASKS WHERE TASK_YR = ? AND TASK_TYPE_CD = ?", [self.todayyr, 'PT'])
@@ -357,7 +384,9 @@ class PCT_TimeDB:
         self.cur.execute(
             "update t_task_time set task_time_no = ? where task_id = ? and tasktime_id = ?", (tm, tid, ttid))
 
-    def insert_task_time(self, tid, ttid):
+    def insert_task_time(self, tid, ttid, new_dt):
+        if self.todaydt != new_dt:
+            self.todaydt = new_dt
         self.cur.execute(
             "select tasktime_id From T_TASK_TIME where task_id = ? and task_time_dt = ?", (tid, self.todaydt))
         test_new_ttid = self.cur.fetchone()

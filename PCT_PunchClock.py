@@ -48,6 +48,9 @@ class PCT_PunchClock(tk.Frame):
             str(timedelta(seconds=self.totaltime)) + \
             ' or ' + str(self.totaltime)
         logging.info(totaltimemsg)
+        self.loopspeed = self.PCTT.get_config_item('AFTERUSE')
+        loopspeedstartmsg = 'Starting loop speed is ' + self.loopspeed
+        logging.info(loopspeedstartmsg)
         self.auto_start()
         self.update_runningcounter()
 
@@ -55,7 +58,7 @@ class PCT_PunchClock(tk.Frame):
         t = tk.Toplevel(self)
         t.wm_title("About")
         t.iconbitmap('digitalclock2.ico')
-        l1 = tk.Label(t, anchor='w', text="PCT Punch Clock Timer v0.101", width=36).grid(
+        l1 = tk.Label(t, anchor='w', text="PCT Punch Clock Timer v0.103", width=36).grid(
             row=0, column=0)
         l2 = tk.Label(t, anchor='w', text="by Ed Lipson (edlipsongm@gmail.com)").grid(
             row=1, column=0)
@@ -251,34 +254,25 @@ class PCT_PunchClock(tk.Frame):
         (tid, ttid, pnm, tnm, tat, tash, tast,
          tsrt, ttim, tdt) = self.tasklist[ix]
         self.new_dt = date.today().isoformat()
-        # print("update before check ", ix,self.new_dt,tdt)
         # moved on to next day or no row, reset tables at ix
         if self.new_dt != tdt or ttid < 0:
-            new_id = self.PCTT.insert_task_time(tid, ttid)
-            # print("update top change ", ttid, new_id)
+            new_ttid = self.PCTT.insert_task_time(tid, ttid, self.new_dt)
             self.timlist[ix] = 0
-            # print("compare dates new, task row ", self.new_dt,tdt)
             if self.new_dt != tdt:
                 self.totaltime = 0
-                # print("timelist ",self.timlist)
                 for i, t in enumerate(self.timlist):
                     self.timlist[i] = 0
                     self.dtimlist[i].set(str(timedelta(seconds=0)))
                     self.tlist[i].configure(text=self.dtimlist[i].get())
-                    # print("tasklist i ",self.tasklist[i],"dtimlist i ",self.dtimlist[i].get())
-                    (tid, ttid, pnm, tnm, tat, tash, tast,
-                     tsrt, ttim, tdt) = self.tasklist[i]
+                    (tid, ttid, pnm, tnm, tat, tash, tast, tsrt, ttim, tdt) = self.tasklist[i]
                     self.tasklist[i] = (
-                        tid, new_id if i == ix else -1, pnm, tnm, tat, tash, tast, tsrt, 0, self.new_dt)
-                    # print("tasklist i ",i,self.tasklist[i])
-                # print("timelist ",self.timlist)
+                        tid, new_ttid if i == ix else -1, pnm, tnm, tat, tash, tast, tsrt, 0, self.new_dt)
                 newdaymsg = "NEWDAY OLD " + \
                     str(tdt) + " NEW " + str(self.new_dt)
                 logging.info(newdaymsg)
             else:
-                self.tasklist[ix] = (
-                    tid, new_id, pnm, tnm, tat, tash, tast, tsrt, 0, self.new_dt)
-            self.PCTT.update_task_time(tid, new_id, 1)
+                self.tasklist[ix] = (tid, new_ttid, pnm, tnm, tat, tash, tast, tsrt, 1, self.new_dt)
+            self.PCTT.update_task_time(tid, new_ttid, 1)
             newtimmsg = "NEWTIME TASK " + pnm + ' ' + \
                 tnm + " DATE " + str(self.new_dt)
             logging.info(newtimmsg)
@@ -301,7 +295,8 @@ class PCT_PunchClock(tk.Frame):
             self.update_db_time(tim, ix)
             self.alarm_check()
         # runs 8.55% slow at 1000 ms
-        self.afterid = self.master.after(1000, self.update_runningcounter)
+        # self.afterid = self.master.after(1000, self.update_runningcounter)
+        self.afterid = self.master.after(self.loopspeed, self.update_runningcounter)
 
     def reset_but(self):
         for b in self.blist:
@@ -344,6 +339,14 @@ class PCT_PunchClock(tk.Frame):
             self.timlist.append(t[8])
         self.adjust_geo(gridrow)
 
+    def update_task_name(self,utid,upnm,utnm):
+        for ix,task in enumerate(self.tasklist):
+            (tid, ttid, pnm, tnm, tat, tash, tast, tsrt, ttim, tdt) = task
+            if tid == utid:
+                self.tasklist[ix] = (tid, ttid, upnm, utnm, tat, tash, tast, tsrt, ttim, tdt)
+                n = upnm + '\n' + utnm
+                self.blist[ix].config(text=n)
+        
     def build_task_display(self):
         gridrow = 1
         ttdtim = str(timedelta(seconds=self.totaltime))

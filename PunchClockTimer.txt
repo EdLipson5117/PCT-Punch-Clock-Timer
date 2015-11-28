@@ -80,7 +80,7 @@ Move time on adjust (2 adjusts, sub from and add to)
 V0.013
 Bug in realert, does not reset to normal after ack of popup
 
-V0.014
+V0.101
 Edit previous days time 
         Select TT.TASKTIME_ID, T.TASK_ID, TT.TASK_TIME_NO, TT.TASK_TIME_DT, TT.TASK_TYPE_CD, 
         T.TASK_NM, T.TASK_PROJ_NM, T.TASK_SORT_RPT_NO
@@ -90,10 +90,21 @@ Edit previous days time
         LEFT outer join 
         (SELECT TASKTIME_ID, TASK_TIME_NO, TASK_TIME_DT, TASK_TYPE_CD, TASK_ID 
         FROM T_TASK_TIME WHERE TASK_TIME_DT = '2015-06-13') TT on T.TASK_ID = TT.TASK_ID
-        order by t.task_sort_rpt_no 
+        order by t.task_sort_rpt_no
+INFO NEWTIME TASK TSG-IAE-DBA-Admin Training Discretionary DATE 2015-06-17 PCT_PunchClock.py PCT_PunchClock update_db_time 225
+Add hidden calculate the width
+    reload task alert times on task edit
+    
+v0.102 BUG in new time date, did not use new segments Issues in Git
+2015-07-03 14:49:17,131 INFO Starting Total time is 8:45:58 or 31558 PCT_PunchClock.py PCT_PunchClock __init__ 50
+2015-07-04 06:28:25,908 INFO NEWDAY OLD 2015-07-03 NEW 2015-07-04 PCT_PunchClock.py PCT_PunchClock update_db_time 277
+2015-07-04 06:28:26,127 INFO NEWTIME TASK Project 2 Task 3 DATE 2015-07-04 PCT_PunchClock.py PCT_PunchClock update_db_time 284
+
+v0.103 Copy forward a year tasks
+    
+
 v0.00n
     Edit previous notes (current time stamp)
-    reload task alert times on task edit
     Split time for up to three active tasks
     Report on Notes as a tree
     Report on Time as a tree

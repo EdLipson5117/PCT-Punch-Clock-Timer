@@ -205,7 +205,7 @@ class PCT_History(tk.Frame):
         self.deletebut.config(default=tk.DISABLED, state=tk.DISABLED)
         self.etlists[3] = [deletephoto, self.deletebut]
         ToolTip.ToolTip(
-            self.edtfldprocessbut, anchor='e', text="Delete the task")
+            self.deletebut, anchor='e', text="Delete the task")
         if tt[3] != None:
             self.NotesDB_Handle.conn_db('R', self.DB_Handle)
             [notes, __] = self.NotesDB_Handle.getTaskNotes(tt[1], 1, tt[3])
