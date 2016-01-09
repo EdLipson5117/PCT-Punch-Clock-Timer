@@ -13,11 +13,12 @@ class PCT_TimeDB:
         self.dbnm = 'PCT_DB'
         self.timelog_key = None
         self.cur = None
+        self.timeadjustok = True
         self.configdict = {}
         self.todaydt = str(date.today().isoformat())
         self.todayyr = str(date.today().strftime('%Y'))
         self.conn = self.conn_db()
-        self.tasks = self.read_tasks()
+        self.tasks = self.read_tasks('SH')
 
     def file_cleanup(self, what):
         p = self.cleandict[what]
@@ -115,12 +116,13 @@ class PCT_TimeDB:
         if opt == 'RPT':
             self.cur.execute(
                 "SELECT trim(TASK_PROJ_NM) || ' ' || trim(TASK_NM), TASK_ID FROM T_TASKS \
-              WHERE TASK_YR = ? ORDER BY TASK_SORT_RPT_NO", [self.todayyr])
+              WHERE TASK_YR = ? AND TASK_ALWAYS_SHOW_CD IN (0,1) ORDER BY TASK_SORT_RPT_NO", [self.todayyr])
         else:
             type_cd = 'PT' if opt == 'GPT' else 'MS'
             self.cur.execute(
                 "SELECT trim(TASK_PROJ_NM) || ' ' || trim(TASK_NM), TASK_ID FROM T_TASKS \
-              WHERE TASK_TYPE_CD = ? and TASK_YR = ? ORDER BY TASK_SORT_GUI_NO", [type_cd, self.todayyr])
+              WHERE TASK_TYPE_CD = ? and TASK_YR = ? AND TASK_ALWAYS_SHOW_CD IN (0,1) \
+              ORDER BY TASK_SORT_GUI_NO", [type_cd, self.todayyr])
         tasks = self.cur.fetchall()
         return tasks
 
@@ -188,8 +190,14 @@ class PCT_TimeDB:
             datalist[3] = None
         else:
             datalist[3] = int(datalist[3]) * 60
+        # if datalist[4] == 'H':
+            # datalist[4] = None
+        # else:
+            # datalist[4] = 1
         if datalist[4] == 'H':
-            datalist[4] = None
+            datalist[4] = 0
+        elif datalist[4] == 'I':
+            datalist[4] = 2
         else:
             datalist[4] = 1
         if datalist[5] == 'N':
@@ -205,75 +213,67 @@ class PCT_TimeDB:
         TASK_ALWAYS_SHOW_CD = ?, \
         TASK_AUTO_START_CD = ? \
         WHERE TASK_ID = ?", datalist[1:] + [datalist[0]])
-        self.tasks = self.read_tasks()
+        self.tasks = self.read_tasks('SH')
 
     def setTaskProj(self, oldpnm, newpnm):
         self.cur.execute(
             "UPDATE T_TASKS SET TASK_PROJ_NM = ? \
         WHERE TASK_PROJ_NM = ? and TASK_YR = ?\
         ", [newpnm, oldpnm, self.todayyr])
-        self.tasks = self.read_tasks()
+        self.tasks = self.read_tasks('SH')
 
     def getTasks(self):
         #    0    1     2    3    4    5     6     7     8     9
         # (tid, ttid, pnm, tnm, tat, tash, tast, tsrt, ttim, tdt) = self.tasklist[ix]
         return self.tasks
 
-    def read_tasks(self):
-        self.cur.execute(
-            "SELECT T.TASK_ID \
-        ,COALESCE(TT.TASKTIME_ID,-1)AS TASKTIME_ID \
-        ,trim(T.TASK_PROJ_NM) AS TASK_PROJ_NM \
-        ,trim(T.TASK_NM) AS TASK_NM \
-        ,COALESCE(T.TASK_ALERT_TM,0) AS TASK_ALERT_TM \
-        ,COALESCE(T.TASK_ALWAYS_SHOW_CD,0) AS TASK_ALAYS_SHOW_CD \
-        ,COALESCE(T.TASK_AUTO_START_CD,0) AS TASK_AUTO_START_CD \
-        ,T.TASK_SORT_GUI_NO \
-        ,COALESCE(TT.TASK_TIME_NO,0) AS TASK_TIME_NO \
-        ,COALESCE(TT.TASK_TIME_DT,?) AS TASK_TIME_DT \
-        FROM \
-          (SELECT TASK_ID, TASK_PROJ_NM, TASK_NM, TASK_ALERT_TM, TASK_ALWAYS_SHOW_CD, \
-          TASK_AUTO_START_CD, TASK_SORT_GUI_NO FROM T_TASKS \
-          WHERE TASK_TYPE_CD = ? AND TASK_YR = ?) T  \
-        LEFT OUTER join \
-          (SELECT TASK_ID, TASKTIME_ID, TASK_TIME_NO, TASK_TIME_DT \
-          FROM T_TASK_TIME WHERE TASK_TIME_DT = ?) TT \
-        ON T.TASK_ID = TT.TASK_ID \
-        ORDER BY T.TASK_SORT_GUI_NO, T.TASK_PROJ_NM, T.TASK_NM",
-            (self.todaydt, 'PT', self.todayyr, self.todaydt))
+    def getallTasks(self):
+        #    0    1     2    3    4    5     6     7     8     9
+        # (tid, ttid, pnm, tnm, tat, tash, tast, tsrt, ttim, tdt) = self.tasklist[ix]
+        return self.read_tasks('SHI')
+        
+    def read_tasks(self,shi):
+        if shi == 'SH':
+            qu = "SELECT T.TASK_ID ,COALESCE(TT.TASKTIME_ID,-1)AS TASKTIME_ID ,trim(T.TASK_PROJ_NM) AS TASK_PROJ_NM ,trim(T.TASK_NM) AS TASK_NM ,COALESCE(T.TASK_ALERT_TM,0) AS TASK_ALERT_TM ,COALESCE(T.TASK_ALWAYS_SHOW_CD,0) AS TASK_ALAYS_SHOW_CD ,COALESCE(T.TASK_AUTO_START_CD,0) AS TASK_AUTO_START_CD ,T.TASK_SORT_GUI_NO ,COALESCE(TT.TASK_TIME_NO,0) AS TASK_TIME_NO ,COALESCE(TT.TASK_TIME_DT,?) AS TASK_TIME_DT FROM (SELECT TASK_ID, TASK_PROJ_NM, TASK_NM, TASK_ALERT_TM, TASK_ALWAYS_SHOW_CD, TASK_AUTO_START_CD, TASK_SORT_GUI_NO FROM T_TASKS WHERE TASK_TYPE_CD = ? AND TASK_YR = ? AND TASK_ALWAYS_SHOW_CD IN (0,1)) T LEFT OUTER join (SELECT TASK_ID, TASKTIME_ID, TASK_TIME_NO, TASK_TIME_DT FROM T_TASK_TIME WHERE TASK_TIME_DT = ?) TT ON T.TASK_ID = TT.TASK_ID ORDER BY T.TASK_SORT_GUI_NO, T.TASK_PROJ_NM, T.TASK_NM"
+        else:
+            qu = "SELECT T.TASK_ID ,COALESCE(TT.TASKTIME_ID,-1)AS TASKTIME_ID ,trim(T.TASK_PROJ_NM) AS TASK_PROJ_NM ,trim(T.TASK_NM) AS TASK_NM ,COALESCE(T.TASK_ALERT_TM,0) AS TASK_ALERT_TM ,COALESCE(T.TASK_ALWAYS_SHOW_CD,0) AS TASK_ALAYS_SHOW_CD ,COALESCE(T.TASK_AUTO_START_CD,0) AS TASK_AUTO_START_CD ,T.TASK_SORT_GUI_NO ,COALESCE(TT.TASK_TIME_NO,0) AS TASK_TIME_NO ,COALESCE(TT.TASK_TIME_DT,?) AS TASK_TIME_DT FROM (SELECT TASK_ID, TASK_PROJ_NM, TASK_NM, TASK_ALERT_TM, TASK_ALWAYS_SHOW_CD, TASK_AUTO_START_CD, TASK_SORT_GUI_NO FROM T_TASKS WHERE TASK_TYPE_CD = ? AND TASK_YR = ? AND TASK_ALWAYS_SHOW_CD IN (0,1,2)) T LEFT OUTER join (SELECT TASK_ID, TASKTIME_ID, TASK_TIME_NO, TASK_TIME_DT FROM T_TASK_TIME WHERE TASK_TIME_DT = ?) TT ON T.TASK_ID = TT.TASK_ID ORDER BY T.TASK_SORT_GUI_NO, T.TASK_PROJ_NM, T.TASK_NM"
+        self.cur.execute(qu,(self.todaydt, 'PT', self.todayyr, self.todaydt))
         self.t = self.cur.fetchall()
         return self.t
+
     def copytasksforwardoneyear(self):
         nextyr = str(int(self.todayyr) + 1)
         lmsg = "Copying tasks forward to next year"
         logging.info(lmsg)
-        lmsg = 'Starting year ' + str(self.todayyr) + ' new year ' + str(nextyr)
-        logging.info (lmsg)
+        lmsg = 'Starting year ' + \
+            str(self.todayyr) + ' new year ' + str(nextyr)
+        logging.info(lmsg)
         self.cur.execute("select count(*) from t_tasks Where task_yr = ?",
                          [nextyr])
         nextyrct = self.cur.fetchone()[0]
         if nextyrct > 0:
             lmsg = 'Next year tasks exist ' + str(nextyrct)
-            logging.warning (lmsg)
+            logging.warning(lmsg)
         else:
             self.cur.execute("select max(task_id) from t_tasks")
             maxtaskid = self.cur.fetchone()[0]
             maxtaskid += 1
-            self.cur.execute("Select TASK_YR+1, TASK_SORT_RPT_NO, TASK_SORT_GUI_NO, TASK_AUTO_START_CD, TASK_ALWAYS_SHOW_CD, TASK_ALERT_TM, TASK_PROJ_NM, TASK_NM, TASK_TYPE_CD From T_TASKS Where task_yr = ? order by task_type_cd,task_sort_gui_no, task_proj_nm, task_nm",
-                         [self.todayyr])
+            self.cur.execute("Select TASK_YR+1, TASK_SORT_RPT_NO, TASK_SORT_GUI_NO, TASK_AUTO_START_CD, TASK_ALWAYS_SHOW_CD, TASK_ALERT_TM, TASK_PROJ_NM, TASK_NM, TASK_TYPE_CD From T_TASKS Where task_yr = ? and TASK_ALWAYS_SHOW_CD in (0,1) order by task_type_cd,task_sort_gui_no, task_proj_nm, task_nm",
+                             [self.todayyr])
             tasks = self.cur.fetchall()
-            for ix,task in enumerate(tasks):
+            for ix, task in enumerate(tasks):
                 taskval = list(task)
                 taskval.append(str(maxtaskid + ix))
                 self.cur.execute("insert into t_tasks (TASK_YR, TASK_SORT_RPT_NO, TASK_SORT_GUI_NO, TASK_AUTO_START_CD, TASK_ALWAYS_SHOW_CD, TASK_ALERT_TM, TASK_PROJ_NM, TASK_NM, TASK_TYPE_CD, task_id) values(?,?,?,?,?,?,?,?,?,?)",
-                         taskval)
+                                 taskval)
             else:
-                lmsg = 'Starting taskid ' + str(maxtaskid) + ' number inserted ' + str(ix+1)
-                logging.info (lmsg)
-        
+                lmsg = 'Starting taskid ' + \
+                    str(maxtaskid) + ' number inserted ' + str(ix + 1)
+                logging.info(lmsg)
+
     def getTasksReport(self):
         self.cur.execute("SELECT TASK_SORT_RPT_NO ,TASK_PROJ_NM ,TASK_NM ,TASK_ID \
-        FROM T_TASKS WHERE TASK_YR = ? AND TASK_TYPE_CD = ?", [self.todayyr, 'PT'])
+        FROM T_TASKS WHERE TASK_TYPE_CD = ?", ['PT'])
         return self.cur.fetchall()
 
     def get_max_but_len(self):
@@ -368,12 +368,22 @@ class PCT_TimeDB:
         logging.info("AFTERTIME new aftertime seconds " + str(new_aftertime))
         if last_appl_tm > after_use:
             if new_aftertime > after_upper and new_aftertime < after_lower:
-                logging.info("AFTERTIME updated to new value")
-                self.cur.execute("UPDATE T_TASK_CONFIG SET CONFIG_VAL_CD = ? \
-                WHERE CONFIG_NM = ?", [str(new_aftertime), "AFTERTIME"])
+                if self.timeadjustok:
+                    logging.info("AFTERTIME updated to new value")
+                    self.cur.execute("UPDATE T_TASK_CONFIG SET CONFIG_VAL_CD = ? \
+                    WHERE CONFIG_NM = ?", [str(new_aftertime), "AFTERTIME"])
+                    self.cur.execute("UPDATE T_TASK_CONFIG SET CONFIG_VAL_CD = ? \
+                    WHERE CONFIG_NM = ?", [str(new_aftertime), "AFTERUSE"])
+                else:
+                    logging.warning("AFTERTIME Adjustment discarded as there was some break in time tracking")
             else:
                 logging.warning("AFTERTIME new aftertime seconds " + str(new_aftertime) +
                                 " out of bounds (' + after_upper + ' to ' + after_lower + '), not updated")
+
+    def timeadjustok_false(self):
+        logging.warning("AFTERTIME Adjustment will not be done, some time adjustment has been made and calculation will be wrong")
+        self.timeadjustok = False
+    
 
     def insert_task_timelog(self, tlid, ttno):
         self.cur.execute("insert into t_task_timelog (timelog_id,log_dt,log_wall_start_tm,log_appl_start_tm)  \
@@ -414,7 +424,7 @@ class PCT_TimeDB:
                     task_always_show_cd, task_auto_start_cd, task_sort_gui_no, task_sort_rpt_no, task_yr) \
                     values (?,?,?,?,?,?,?,?,?,?)",
                          (new_tid, 'PT', tnm, pnm, at, ash, ast, sgui, srpt, yr))
-        self.tasks = self.read_tasks()
+        self.tasks = self.read_tasks('SH')
         return new_tid
 
     def conn_db(self):
@@ -427,7 +437,7 @@ class PCT_TimeDB:
             db, detect_types=sqlite3.PARSE_DECLTYPES | sqlite3.PARSE_COLNAMES)
         self.cur = self.conn.cursor()
         self.conn.isolation_level = None
-        self.run_migrations('v0_009c')
+        self.run_migrations('v0_009d')
         self.load_config()
         self.conn.close()
         dbbk = dbnm + '_bkup_' + dbbdt + dbext
@@ -597,6 +607,13 @@ class PCT_TimeDB:
                 lcur.execute("UPDATE T_TASK_CONFIG \
                 SET CONFIG_VAL_CD = ?\
                 WHERE CONFIG_ID = 3", [ver])
+            if dbvercd == 'v0_009c' and ver == 'v0_009d':
+                logging.info('moving from ' + dbvercd + ' to ' + ver)
+                lcur.execute("UPDATE T_TASKS SET TASK_ALWAYS_SHOW_CD = 0 WHERE TASK_ALWAYS_SHOW_CD is NULL")
+                lcur.execute("UPDATE T_TASK_CONFIG \
+                SET CONFIG_NM = ?, CONFIG_VAL_CD = ?, CONFIG_NM_DESC_TX = ? \
+                WHERE CONFIG_ID = 3", ['DBVERSION', ver, "Database Version expected by code. Don't change by hand"])
+                
         else:  # first migration runs
             logging.info('moving to v0_007 ' + dbvercd + ' ' + ver)
             self.conn.isolation_level = 'DEFERRED'

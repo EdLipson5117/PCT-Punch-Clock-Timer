@@ -58,7 +58,7 @@ class PCT_PunchClock(tk.Frame):
         t = tk.Toplevel(self)
         t.wm_title("About")
         t.iconbitmap('digitalclock2.ico')
-        l1 = tk.Label(t, anchor='w', text="PCT Punch Clock Timer v0.103", width=36).grid(
+        l1 = tk.Label(t, anchor='w', text="PCT Punch Clock Timer v0.104", width=36).grid(
             row=0, column=0)
         l2 = tk.Label(t, anchor='w', text="by Ed Lipson (edlipsongm@gmail.com)").grid(
             row=1, column=0)
@@ -145,6 +145,8 @@ class PCT_PunchClock(tk.Frame):
         self.runningix = None
         self.reset_but()
         self.togglealarm()
+        logging.info("Stop button pressed. Looptime adjustment will not be done")
+        self.PCTT.timeadjustok_false()
 
     def get_noteshandle(self):
         return self.noteshandle
@@ -264,14 +266,18 @@ class PCT_PunchClock(tk.Frame):
                     self.timlist[i] = 0
                     self.dtimlist[i].set(str(timedelta(seconds=0)))
                     self.tlist[i].configure(text=self.dtimlist[i].get())
-                    (tid, ttid, pnm, tnm, tat, tash, tast, tsrt, ttim, tdt) = self.tasklist[i]
+                    (tid, ttid, pnm, tnm, tat, tash, tast,
+                     tsrt, ttim, tdt) = self.tasklist[i]
                     self.tasklist[i] = (
                         tid, new_ttid if i == ix else -1, pnm, tnm, tat, tash, tast, tsrt, 0, self.new_dt)
                 newdaymsg = "NEWDAY OLD " + \
                     str(tdt) + " NEW " + str(self.new_dt)
                 logging.info(newdaymsg)
+                logging.info("New Day reached. Looptime adjustment will not be done")
+                self.PCTT.timeadjustok_false()
             else:
-                self.tasklist[ix] = (tid, new_ttid, pnm, tnm, tat, tash, tast, tsrt, 1, self.new_dt)
+                self.tasklist[ix] = (
+                    tid, new_ttid, pnm, tnm, tat, tash, tast, tsrt, 1, self.new_dt)
             self.PCTT.update_task_time(tid, new_ttid, 1)
             newtimmsg = "NEWTIME TASK " + pnm + ' ' + \
                 tnm + " DATE " + str(self.new_dt)
@@ -296,7 +302,8 @@ class PCT_PunchClock(tk.Frame):
             self.alarm_check()
         # runs 8.55% slow at 1000 ms
         # self.afterid = self.master.after(1000, self.update_runningcounter)
-        self.afterid = self.master.after(self.loopspeed, self.update_runningcounter)
+        self.afterid = self.master.after(
+            self.loopspeed, self.update_runningcounter)
 
     def reset_but(self):
         for b in self.blist:
@@ -339,14 +346,15 @@ class PCT_PunchClock(tk.Frame):
             self.timlist.append(t[8])
         self.adjust_geo(gridrow)
 
-    def update_task_name(self,utid,upnm,utnm):
-        for ix,task in enumerate(self.tasklist):
+    def update_task_name(self, utid, upnm, utnm):
+        for ix, task in enumerate(self.tasklist):
             (tid, ttid, pnm, tnm, tat, tash, tast, tsrt, ttim, tdt) = task
             if tid == utid:
-                self.tasklist[ix] = (tid, ttid, upnm, utnm, tat, tash, tast, tsrt, ttim, tdt)
+                self.tasklist[ix] = (
+                    tid, ttid, upnm, utnm, tat, tash, tast, tsrt, ttim, tdt)
                 n = upnm + '\n' + utnm
                 self.blist[ix].config(text=n)
-        
+
     def build_task_display(self):
         gridrow = 1
         ttdtim = str(timedelta(seconds=self.totaltime))

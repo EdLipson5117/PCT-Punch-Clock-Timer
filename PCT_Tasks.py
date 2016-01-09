@@ -72,6 +72,12 @@ class PCT_Tasks(tk.Frame):
         else:
             return False
 
+    def val_shi(self, value):
+        if value in ['S', 'H', 'I']:
+            return True
+        else:
+            return False
+
     def val_nt(self, value):
         try:
             v = int(value)
@@ -113,6 +119,7 @@ class PCT_Tasks(tk.Frame):
         self.valdict[None] = self.val_none
         self.valdict['A'] = self.val_a
         self.valdict['SH'] = self.val_sh
+        self.valdict['SHI'] = self.val_shi
         self.valdict['NT'] = self.val_nt
         self.valdict['YN'] = self.val_yn
         self.valdict['NS'] = self.val_ns
@@ -285,13 +292,17 @@ class PCT_Tasks(tk.Frame):
             None, None, None, None, None, None, None, None, None, None]
         self.n_list[2] = elist[0]
         self.n_list[3] = elist[1]
+        print('b',elist,self.n_list)
         if elist[2].upper() == 'S':
             self.n_list[5] = 1
             elist[2] = 1
+        elif elist[2].upper() == 'I':
+            self.n_list[5] = 2
+            elist[2] = 2
         else:
             self.n_list[5] = 0
             elist[2] = None
-
+        print('a',elist,self.n_list)
         elist[3] = int(elist[3]) * 60
         self.n_list[4] = elist[3]
         if elist[3] == 0:
@@ -386,13 +397,13 @@ class PCT_Tasks(tk.Frame):
         ToolTip.ToolTip(self.mqb, anchor='e', text="Leave the window")
         self.plusphoto = tk.PhotoImage(file='Icojam-Blue-Bits-Math-add.gif')
         self.mab = tk.Button(self.holdmtl, image=self.plusphoto,
-                             command=lambda lbix=self.bix: self.process_timeadjustment('A', lbix))
+                             command=lambda lbix=self.bix: self.process_timeadjustment('A', lbix,'A'))
         self.mab.grid(row=0, column=1)
         self.mab.config(state=tk.DISABLED)
         ToolTip.ToolTip(self.mab, anchor='e', text="Add the time")
         self.minusphoto = tk.PhotoImage(file='Icojam-Blue-Bits-Math-minus.gif')
         self.msb = tk.Button(self.holdmtl, image=self.minusphoto,
-                             command=lambda lbix=self.bix: self.process_timeadjustment('M', lbix))
+                             command=lambda lbix=self.bix: self.process_timeadjustment('M', lbix,'A'))
         self.msb.grid(row=0, column=2)
         self.msb.config(state=tk.DISABLED)
         ToolTip.ToolTip(self.msb, anchor='e', text="Subtract the time")
@@ -415,12 +426,12 @@ class PCT_Tasks(tk.Frame):
     def process_tofrom_timeadjustment(self):
         # print("process to from time adjust and ",__name__)
         # print(self.bix,self.frombix)
-        self.process_timeadjustment('A', self.bix)
-        self.process_timeadjustment('M', self.frombix)
+        self.process_timeadjustment('A', self.bix,'M')
+        self.process_timeadjustment('M', self.frombix,'M')
         self.frombix = None
         self.activatemoveprocesssw = 0
 
-    def process_timeadjustment(self, op, bix):
+    def process_timeadjustment(self, op, bix,adjustormove):
         min = self.modval.get()
         # print("process time adjustment")
         # print(op,bix,min)
@@ -429,6 +440,8 @@ class PCT_Tasks(tk.Frame):
             if op == 'M':
                 sec *= -1
             punchclock.PCT_PunchClock.adjust_task_time(self.holdpct, bix, sec)
+            if adjustormove == 'A':
+                self.holddbh.timeadjustok_false()
         punchclock.PCT_PunchClock.popupquit(self.holdpct, self.holdmtl)
 
     def val_time(self, reason, value, widget):
@@ -747,19 +760,19 @@ class PCT_Tasks(tk.Frame):
         ToolTip.ToolTip(etlqb, anchor='e', text="Leave the window")
         etlcnyphoto = tk.PhotoImage(file='fire-ball-icon32-hi.gif')
         self.etllists[3].append(etlcnyphoto)
-        etlcnyb = tk.Button(holdetltl, image=etlcnyphoto, 
-                        command=lambda: PCT_TimeDB.PCT_TimeDB.copytasksforwardoneyear(dbhandle))
+        etlcnyb = tk.Button(holdetltl, image=etlcnyphoto,
+                            command=lambda: PCT_TimeDB.PCT_TimeDB.copytasksforwardoneyear(dbhandle))
         self.etllists[4].append(etlcnyb)
         etlcnyb.grid(row=0, column=1)
         ToolTip.ToolTip(etlcnyb, anchor='e', text="Copy Year Forward")
-        tasks = self.DB_Handle.getTasks()
+        tasks = self.DB_Handle.getallTasks()
         tnwidth = self.DB_Handle.get_max_but_len() * 2
         vsb = tk.Scrollbar(
             holdetltl, orient="vertical", command=self.etl_OnVsb)
         self.etllists[1] = vsb
         cl2 = tk.Label(holdetltl, text='Project Task')
         cl4 = tk.Label(holdetltl, text='Alarm Time')
-        cl5 = tk.Label(holdetltl, text='Show/Hide')
+        cl5 = tk.Label(holdetltl, text='Show/Hide/Invisible')
         cl6 = tk.Label(holdetltl, text='AutoStart')
         cl2.grid(row=1, column=0)
         cl4.grid(row=1, column=1)
@@ -795,6 +808,8 @@ class PCT_Tasks(tk.Frame):
             at = str(at) if at > 0 else 'None'
             lb4.insert("end", "%s" % at)
             sh = 'Show' if task[5] == 1 else 'Hide'
+            shi = ['Hide','Show','Invisible']
+            sh = shi[task[5]]
             lb5.insert("end", "%s" % sh)
             ast = 'Yes' if task[5] == 1 else 'No'
             lb6.insert("end", "%s" % ast)
@@ -859,7 +874,9 @@ class PCT_Tasks(tk.Frame):
         if at == 0:
             at = None
         ast = 'N' if ast == 0 else 'Y'
-        swhd = 'H' if swhd == 0 else 'S'
+        # swhd = 'H' if swhd == 0 else 'S'
+        shi = ['H','S','I']
+        swhd = shi[swhd]
         self.etlists[5] = [tid, pnm, tnm, at, ast, swhd]
         self.edtfldvalopt = []
         self.holdparent = self.etlists[0][0]
@@ -871,8 +888,8 @@ class PCT_Tasks(tk.Frame):
                        "Reset the project name for all of the tasks with this project")
         self.add_field(3, "Task Name", twidth, 50, tnm, 'A',
                        "The name of the task in the project. This is required")
-        self.add_field(4, "(S)how or (H)ide", twidth, 2, swhd, 'SH',
-                       "Initially show or hide this task. Hidden tasks can be added for the day, and will resume hidding on the next day")
+        self.add_field(4, "(S)how or (H)ide or (I)nvisible", twidth, 2, swhd, 'SHI',
+                       "Initially show or hide this task. Hidden tasks can be added for the day, and will resume hidding on the next day. Invisable tasks are not in use, will not be copied forward to next year")
         self.add_field(5, "Alarm Time (0,minutes)", twidth, 4, at, 'NT',
                        "Should you have an alarm pop after n minutes to remind you about booking time to this task? Reminder so you can switch tasks appropriately")
         self.add_field(6, "Auto Start (only 1,Y/N)", twidth, 2, ast, 'YN',
@@ -891,7 +908,7 @@ class PCT_Tasks(tk.Frame):
         tas = self.edtfld[5][0].get()
         tid = self.etlists[5][0]
         self.etlists[0][2].setTask([tid, pnm, tnm, tat, tsh, tas])
-        self.holdpct.update_task_name(tid,pnm,tnm) 
+        self.holdpct.update_task_name(tid, pnm, tnm)
         punchclock.PCT_PunchClock.reset_alarmcycletime(self.holdpct, tid, tat)
         if allpnm == 'Y':
             self.etlists[0][2].setTaskProj(self.etlists[5][1], pnm)
