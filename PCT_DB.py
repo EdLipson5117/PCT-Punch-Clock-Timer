@@ -112,7 +112,7 @@ class PCT_TimeDB:
         nm = self.cur.fetchall()
         return nm[0]
 
-    def getallTasks(self, opt):
+    def getallTasksrpt(self, opt):
         if opt == 'RPT':
             self.cur.execute(
                 "SELECT trim(TASK_PROJ_NM) || ' ' || trim(TASK_NM), TASK_ID FROM T_TASKS \

@@ -687,7 +687,7 @@ class PCT_Tasks(tk.Frame):
         lbpb = tk.Button(holdlbtl, image=lbpphoto)
         lbpb.grid(row=0, column=1)
         ToolTip.ToolTip(lbpb, anchor='w', text="Apply the new Order")
-        tasks = self.DB_Handle.getallTasks(opt)
+        tasks = self.DB_Handle.getallTasksrpt(opt)
         w = 0
         for task in tasks:
             if w < len(task[0]):
